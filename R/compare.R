@@ -8,16 +8,16 @@ traceToHash <- function(traceData,
                         mxnetModel = NULL)
 {
   
-  finIter <- getRefClass("finIter",where = as.environment(".finFindREnv"))
+  whaleRidgeIter <- getRefClass("whaleRidgeIter",where = as.environment(".whaleFindREnv"))
   if (is.null(mxnetModel))
   {
     stop("No model in traceToHash")
-    #mxnetModel <- mxnet::mx.model.load(file.path( system.file("extdata", package="finFindR"),'fin_triplet32_4096_final'), 5600)
+    #mxnetModel <- mxnet::mx.model.load(file.path( system.file("extdata", package="whaleRidgeFindR"),'whaleRidge_triplet32_4096_whaleRidgeal'), 5600)
   }
   print("iter")
   iterInputFormat <- sapply(traceData,function(x){as.numeric(resize(x,size_x = 200,interpolation_type = 6))})
   # browser()
-  dataIter <- finIter$new(data = iterInputFormat,
+  dataIter <- whaleRidgeIter$new(data = iterInputFormat,
                           data.shape = 200)
   print("embed")
   is.mx.dataiter <- function(x) {
@@ -68,8 +68,8 @@ distanceToRef <- function(queryHash,
 #' @title distanceToRefParallel 
 #' @description Function performing batched matching between a query catalogue to a reference catalogue
 #' To call from opencpu, basic format resembles hashes={[0.1, 1.5, 2.2, 3.0],[6.0, 3.3, 4.1, 5.3]}
-#' where each vector denotes the featues extracted from an image of a dorsal fin.
-#' @usage curl http://localhost:8004/ocpu/library/finFindR/R/distanceToRefParallel/json\
+#' where each vector denotes the featues extracted from an image of a dorsal whale ridge.
+#' @usage curl http://localhost:8004/ocpu/library/whaleRidgeFindR/R/distanceToRefParallel/json\
 #'  -d "{\
 #'  \"queryHashData\":{\"unk1\":[1,2,3]},\
 #'  \"referenceHashData\":{\"sal\":[-1,2,4],\"bob\":[-1,-2,-4]},\

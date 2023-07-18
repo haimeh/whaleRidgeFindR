@@ -2,8 +2,8 @@
 {
   require("mxnet")
   imager:::cimg.use.openmp("never")
-  .whaleFindREnv <- new.env()
-  .whaleFindREnv$finIter <- setRefClass("finIter",
+  .whaleRidgeFindREnv <- new.env()
+  .whaleRidgeFindREnv$whaleRidgeIter <- setRefClass("whaleRidgeIter",
                                       
                                       fields=c("data",
                                                "iter",
@@ -50,5 +50,5 @@
                                         }
                                       )
   )
-  attach(what=.whaleFindREnv,name = ".whaleFindREnv")
+  attach(what=.whaleRidgeFindREnv,name = ".whaleRidgeFindREnv")
 }
