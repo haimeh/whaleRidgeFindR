@@ -12,7 +12,7 @@ traceToHash <- function(traceData,
   if (is.null(mxnetModel))
  {
     #stop("No model in traceToHash")
-    mxnetModel <- mxnet::mx.model.load(file.path( system.file("extdata", package="whaleRidgeFindR"),' SWA_8annulus_cluster_refine2_03-17-May-2023_fin'), 00)
+    mxnetModel <- mxnet::mx.model.load(file.path( system.file("extdata", package="whaleRidgeFindR"),'SWA_8annulus_cluster_refine2_03-17-May-2023_fin'), 00)
   }
   print("iter")
   iterInputFormat <- sapply(traceData,function(x){as.numeric(resize(x,size_x = 200,interpolation_type = 6))})
