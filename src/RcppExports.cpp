@@ -14,7 +14,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // findPath
 std::vector<int> findPath(const Rcpp::NumericMatrix edge, const int startx, const int starty, const int endx, const int endy, const int minX, const int maxX, const int minY, const int maxY, const int proximity);
-RcppExport SEXP _whaleFindR_findPath(SEXP edgeSEXP, SEXP startxSEXP, SEXP startySEXP, SEXP endxSEXP, SEXP endySEXP, SEXP minXSEXP, SEXP maxXSEXP, SEXP minYSEXP, SEXP maxYSEXP, SEXP proximitySEXP) {
+RcppExport SEXP _whaleRidgeFindR_findPath(SEXP edgeSEXP, SEXP startxSEXP, SEXP startySEXP, SEXP endxSEXP, SEXP endySEXP, SEXP minXSEXP, SEXP maxXSEXP, SEXP minYSEXP, SEXP maxYSEXP, SEXP proximitySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -34,7 +34,7 @@ END_RCPP
 }
 // extractAnnulus
 Rcpp::NumericVector extractAnnulus(const Rcpp::NumericVector imageFromR, const Rcpp::IntegerVector xCoordinates, const Rcpp::IntegerVector yCoordinates);
-RcppExport SEXP _whaleFindR_extractAnnulus(SEXP imageFromRSEXP, SEXP xCoordinatesSEXP, SEXP yCoordinatesSEXP) {
+RcppExport SEXP _whaleRidgeFindR_extractAnnulus(SEXP imageFromRSEXP, SEXP xCoordinatesSEXP, SEXP yCoordinatesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -47,7 +47,7 @@ END_RCPP
 }
 // extractEdgeMap
 Rcpp::NumericVector extractEdgeMap(const Rcpp::NumericVector gradientFromR, const Rcpp::NumericVector anglesFromR);
-RcppExport SEXP _whaleFindR_extractEdgeMap(SEXP gradientFromRSEXP, SEXP anglesFromRSEXP) {
+RcppExport SEXP _whaleRidgeFindR_extractEdgeMap(SEXP gradientFromRSEXP, SEXP anglesFromRSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -59,13 +59,13 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_whaleFindR_findPath", (DL_FUNC) &_whaleFindR_findPath, 10},
-    {"_whaleFindR_extractAnnulus", (DL_FUNC) &_whaleFindR_extractAnnulus, 3},
-    {"_whaleFindR_extractEdgeMap", (DL_FUNC) &_whaleFindR_extractEdgeMap, 2},
+    {"_whaleRidgeFindR_findPath", (DL_FUNC) &_whaleRidgeFindR_findPath, 10},
+    {"_whaleRidgeFindR_extractAnnulus", (DL_FUNC) &_whaleRidgeFindR_extractAnnulus, 3},
+    {"_whaleRidgeFindR_extractEdgeMap", (DL_FUNC) &_whaleRidgeFindR_extractEdgeMap, 2},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_whaleFindR(DllInfo *dll) {
+RcppExport void R_init_whaleRidgeFindR(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

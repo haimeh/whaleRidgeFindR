@@ -18,7 +18,7 @@
 #' @param maxY Lower boundary
 #' @param proximity Distance to ending coordinate at which trace can terminate
 findPath <- function(edge, startx, starty, endx, endy, minX, maxX, minY, maxY, proximity) {
-    .Call(`_whaleFindR_findPath`, edge, startx, starty, endx, endy, minX, maxX, minY, maxY, proximity)
+    .Call(`_whaleRidgeFindR_findPath`, edge, startx, starty, endx, endy, minX, maxX, minY, maxY, proximity)
 }
 
 #' extractAnnulus
@@ -34,7 +34,7 @@ findPath <- function(edge, startx, starty, endx, endy, minX, maxX, minY, maxY, p
 #' @param yCoordinates y pixel coordinates for data extraction
 #' @export
 extractAnnulus <- function(imageFromR, xCoordinates, yCoordinates) {
-    .Call(`_whaleFindR_extractAnnulus`, imageFromR, xCoordinates, yCoordinates)
+    .Call(`_whaleRidgeFindR_extractAnnulus`, imageFromR, xCoordinates, yCoordinates)
 }
 
 #' simplifyAngles
@@ -73,6 +73,6 @@ NULL
 #' @param anglesFromR cimg wraped as NumericVector
 #' @export
 extractEdgeMap <- function(gradientFromR, anglesFromR) {
-    .Call(`_whaleFindR_extractEdgeMap`, gradientFromR, anglesFromR)
+    .Call(`_whaleRidgeFindR_extractEdgeMap`, gradientFromR, anglesFromR)
 }
 
