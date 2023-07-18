@@ -8,7 +8,7 @@ traceToHash <- function(traceData,
                         mxnetModel = NULL)
 {
   
-  whaleRidgeIter <- getRefClass("whaleRidgeIter",where = as.environment(".whaleFindREnv"))
+  whaleRidgeIter <- getRefClass("whaleRidgeIter",where = as.environment(".whaleRidgeFindREnv"))
   if (is.null(mxnetModel))
   {
     stop("No model in traceToHash")
