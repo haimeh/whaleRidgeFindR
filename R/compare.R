@@ -21,40 +21,40 @@ mx.model.init.params_cust <- function (symbol, input.shape, fixed.shape, output.
 }
 
 
-#mx.simple.bind_tst <- function(symbol, ctx, dtype ,grad.req = "null", fixed.param = NULL, slist, ...) {
-#
-#
-#  if (!mxnet:::is.MXSymbol(symbol)) stop("symbol need to be MXSymbol")
-#  #slist <- symbol$infer.shape(list(...))
-#
-#  if (is.null(slist)) {
-#    stop("Need more shape information to decide the shapes of arguments")
-#  }
-#  #print(slist$arg.shapes)
-#  if ( any(sapply(slist$arg.shapes,anyNA)) ) browser()
-#
-#  arg.arrays <- sapply(slist$arg.shapes, function(shape) {
-#    mx.nd.array(array(0,shape), ctx)
-#  }, simplify = FALSE, USE.NAMES = TRUE)
-#  aux.arrays <- sapply(slist$aux.shapes, function(shape) {
-#    mx.nd.array(array(0,shape), ctx)
-#  }, simplify = FALSE, USE.NAMES = TRUE)
-#  grad.reqs <- lapply(names(slist$arg.shapes), function(nm) {
-#    if (nm %in% fixed.param) {
-#      print("found fixed.param")
-#      "null"
-#    } else if (!endsWith(nm, "label") && !endsWith(nm, "data")) {
-#      grad.req
-#    } else {
-#      "null"
-#    }
-#  })
-#  print("BOUND")
-#  return(mxnet:::mx.symbol.bind(symbol, ctx,
-#                 arg.arrays=arg.arrays,
-#                 aux.arrays=aux.arrays,
-#                 grad.reqs = grad.reqs))
-#}
+mx.simple.bind_cust <- function(symbol, ctx, dtype ,grad.req = "null", fixed.param = NULL, slist, ...) {
+
+
+  if (!mxnet:::is.MXSymbol(symbol)) stop("symbol need to be MXSymbol")
+  #slist <- symbol$infer.shape(list(...))
+
+  if (is.null(slist)) {
+    stop("Need more shape information to decide the shapes of arguments")
+  }
+  #print(slist$arg.shapes)
+  if ( any(sapply(slist$arg.shapes,anyNA)) ) browser()
+
+  arg.arrays <- sapply(slist$arg.shapes, function(shape) {
+    mx.nd.array(array(0,shape), ctx)
+  }, simplify = FALSE, USE.NAMES = TRUE)
+  aux.arrays <- sapply(slist$aux.shapes, function(shape) {
+    mx.nd.array(array(0,shape), ctx)
+  }, simplify = FALSE, USE.NAMES = TRUE)
+  grad.reqs <- lapply(names(slist$arg.shapes), function(nm) {
+    if (nm %in% fixed.param) {
+      print("found fixed.param")
+      "null"
+    } else if (!endsWith(nm, "label") && !endsWith(nm, "data")) {
+      grad.req
+    } else {
+      "null"
+    }
+  })
+  print("BOUND")
+  return(mxnet:::mx.symbol.bind(symbol, ctx,
+                 arg.arrays=arg.arrays,
+                 aux.arrays=aux.arrays,
+                 grad.reqs = grad.reqs))
+}
 
 predict.MXFeedForwardModel_cust <- function(
 	model, 
@@ -109,8 +109,8 @@ predict.MXFeedForwardModel_cust <- function(
     slist <- initialized[[3]]
     arg_lst <- list(symbol = model$symbol, ctx = ctx, data = dim(dlist$data), grad.req = "null", slist=slist)
 
-    #pexec <- do.call(mx.simple.bind_tst, arg_lst)
-    pexec <- do.call(mx.simple.bind, arg_lst)
+    pexec <- do.call(mx.simple.bind_cust, arg_lst)
+    #pexec <- do.call(mx.simple.bind, arg_lst)
     if (allow.extra.params) {
         model$arg.params[!names(model$arg.params) %in% arguments(model$symbol)] <- NULL
     }
@@ -120,14 +120,19 @@ predict.MXFeedForwardModel_cust <- function(
     X$reset()
     while (X$iter.next()) {
         dlist = X$value()
+		print(dlist$data)
         mxnet:::mx.exec.update.arg.arrays(pexec, list(data = dlist$data),
             match.name = TRUE)
         mxnet:::mx.exec.forward(pexec, is.train = FALSE)
         out.pred <- mxnet:::mx.nd.copyto(pexec$ref.outputs[[1]], mx.cpu())
+		print(out.pred)
         padded <- X$num.pad()
         oshape <- dim(out.pred)
+		print(oshape)
         ndim <- length(oshape)
+		print(oshape[[ndim]] - padded)
         packer$push(mxnet:::mx.nd.slice(out.pred, 0, oshape[[ndim]] - padded))
+		print("done")
     }
     X$reset()
     return(packer$get())
@@ -161,7 +166,7 @@ traceToHash <- function(traceData,
   
   #netEmbedding <- mxnet:::predict.MXFeedForwardModel(mxnetModel,
   netEmbedding <- predict.MXFeedForwardModel_cust(model=mxnetModel,
-                                                     dataIter,
+                                                     X=dataIter,
                                                      array.layout = "colmajor",
                                                      ctx= mx.cpu(),
                                                      allow.extra.params=T)
