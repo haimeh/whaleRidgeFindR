@@ -59,6 +59,9 @@ mx.simple.bind_cust <- function(symbol, ctx, dtype ,grad.req = "null", fixed.par
 #Error in packer$push(mxnet:::mx.nd.slice(out.pred, 0, oshape[[ndim]] -  :
 #  std::exception
 
+#pkgEnv = getNamespace("whaleRidgeFindR")
+#attach(pkgEnv)
+
 predict.MXFeedForwardModel_cust <- function(
 	model, 
 	X, 
@@ -124,9 +127,9 @@ predict.MXFeedForwardModel_cust <- function(
     X$reset()
 	i = 0
     while (X$iter.next()) {
+			#browser()
 		i=i+1
         dlist = X$value()
-		print(dlist$data)
         mxnet:::mx.exec.update.arg.arrays(pexec, list(data = dlist$data),match.name = TRUE)
         mxnet:::mx.exec.forward(pexec, is.train = FALSE)
         out.pred <- mxnet:::mx.nd.copyto(pexec$ref.outputs[[1]], mx.cpu())
@@ -143,7 +146,6 @@ predict.MXFeedForwardModel_cust <- function(
     }
     X$reset()
 	#result = packer$get()
-	browser()
 	packer <- lapply(mxPacker,as.array)
 	if(length(packer)>1){
 	result <- do.call(cbind,packer)
