@@ -1,130 +1,130 @@
-
-mx.model.init.params_tst <- function (symbol, input.shape, fixed.shape, output.shape, initializer, ctx)
-{
-
-    if (!mxnet:::is.MXSymbol(symbol))
-        stop("symbol needs to be MXSymbol")
-    arg_lst <- list(symbol = symbol)
-    arg_lst <- append(arg_lst, input.shape)
-    arg_lst <- append(arg_lst, output.shape)
-    arg_lst <- append(arg_lst, fixed.shape)
-
-    slist <- do.call(mxnet:::mx.symbol.infer.shape, arg_lst)
-    if (is.null(slist)) stop("Not enough information to get shapes")
-
-    arg.params <- mxnet:::mx.init.create(initializer, slist$arg.shapes, ctx, skip.unknown = TRUE)
-    #arg.params <- mx.init.create(initializer,  
-    #                             slist$arg.shapes[-which(names(slist$arg.shapes) %in% names(fixed.shape))]
-    #                             ,ctx, skip.unknown = TRUE)
-       aux.params <- mxnet:::mx.init.create(initializer, slist$aux.shapes,ctx, skip.unknown = FALSE)
-    return(list(arg.params = arg.params, aux.params = aux.params, slist))
-}
-
-
-mx.simple.bind_tst <- function(symbol, ctx, dtype ,grad.req = "null", fixed.param = NULL, slist, ...) {
-
-
-  if (!mxnet:::is.MXSymbol(symbol)) stop("symbol need to be MXSymbol")
-  #slist <- symbol$infer.shape(list(...))
-
-  if (is.null(slist)) {
-    stop("Need more shape information to decide the shapes of arguments")
-  }
-  #print(slist$arg.shapes)
-  if ( any(sapply(slist$arg.shapes,anyNA)) ) browser()
-
-  arg.arrays <- sapply(slist$arg.shapes, function(shape) {
-    mx.nd.array(array(0,shape), ctx)
-  }, simplify = FALSE, USE.NAMES = TRUE)
-  aux.arrays <- sapply(slist$aux.shapes, function(shape) {
-    mx.nd.array(array(0,shape), ctx)
-  }, simplify = FALSE, USE.NAMES = TRUE)
-  grad.reqs <- lapply(names(slist$arg.shapes), function(nm) {
-    if (nm %in% fixed.param) {
-      print("found fixed.param")
-      "null"
-    } else if (!endsWith(nm, "label") && !endsWith(nm, "data")) {
-      grad.req
-    } else {
-      "null"
-    }
-  })
-  print("BOUND")
-  return(mxnet:::mx.symbol.bind(symbol, ctx,
-                 arg.arrays=arg.arrays,
-                 aux.arrays=aux.arrays,
-                 grad.reqs = grad.reqs))
-}
-predict.MXFeedForwardModel_tst <- function (model, X, ctx = NULL, array.batch.size = 128, array.layout = "auto",
-    allow.extra.params = TRUE)
-{
-    if (is.serialized(model))
-        model <- mxnet:::mx.unserialize(model)
-    if (is.null(ctx))
-        ctx <- mxnet:::mx.ctx.default()
-    if (is.array(X) || is.matrix(X)) {
-        if (array.layout == "auto") {
-            array.layout <- mxnet:::mx.model.select.layout.predict(X,
-                model)
-        }
-        if (array.layout == "rowmajor") {
-            X <- t(X)
-        }
-    }
-    X <-mxnet:::mx.model.init.iter(X, NULL, batch.size = array.batch.size,
-        is.train = FALSE)
-    X$reset()
-    if (!X$iter.next())
-        stop("Cannot predict on empty iterator")
-    dlist = X$value()
-    ## extract shape based on symbol name
-    ### %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    #namedShapes <- lapply(model$symbol$arguments,function(x){
-	#			  as.integer(strsplit(gsub("\\(([^()]*)\\)|.", "\\1", x, perl=T),",")[[1]])
-	#   }
-    #)
-    #names(namedShapes) <- model$symbol$arguments
-    #fixed.shapes <- namedShapes[sapply(namedShapes,function(x)length(x)!=0)]
-    ### %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-	fixed.shapes <- append(sapply(model$arg.params,dim),sapply(model$aux.params,dim))
-
-    input.names <- names(dlist)
-    input.shape <- sapply(input.names, function(n){dim(dlist[[n]])}, simplify = FALSE)
-    input.shape <- input.shape[1]
-    #fixed.shapes <- append(namedShapes,lapply(fixed.param,dim))
-    initialized <- mx.model.init.params_tst(symbol=model$symbol, 
-				   input.shape=input.shape, 
-				   fixed.shape=fixed.shapes, 
-				   output.shape=NULL, 
-				   initializer=mx.init.uniform(0), 
-				   ctx=ctx)
-    params <- initialized[1:2]
-    slist <- initialized[[3]]
-    arg_lst <- list(symbol = model$symbol, ctx = ctx, data = dim(dlist$data), grad.req = "null", slist=slist)
-
-    pexec <- do.call(mx.simple.bind_tst, arg_lst)
-    if (allow.extra.params) {
-        model$arg.params[!names(model$arg.params) %in% arguments(model$symbol)] <- NULL
-    }
-	mxnet:::mx.exec.update.arg.arrays(pexec, model$arg.params, match.name = TRUE)
-    mxnet:::mx.exec.update.aux.arrays(pexec, model$aux.params, match.name = TRUE)
-    packer <- mxnet:::mx.nd.arraypacker()
-    X$reset()
-    while (X$iter.next()) {
-        dlist = X$value()
-        mxnet:::mx.exec.update.arg.arrays(pexec, list(data = dlist$data),
-            match.name = TRUE)
-        mxnet:::mx.exec.forward(pexec, is.train = FALSE)
-        out.pred <- mxnet:::mx.nd.copyto(pexec$ref.outputs[[1]], mx.cpu())
-        padded <- X$num.pad()
-        oshape <- dim(out.pred)
-        ndim <- length(oshape)
-        packer$push(mxnet:::mx.nd.slice(out.pred, 0, oshape[[ndim]] - padded))
-    }
-    X$reset()
-    return(packer$get())
-}
+#
+#mx.model.init.params_tst <- function (symbol, input.shape, fixed.shape, output.shape, initializer, ctx)
+#{
+#
+#    if (!mxnet:::is.MXSymbol(symbol))
+#        stop("symbol needs to be MXSymbol")
+#    arg_lst <- list(symbol = symbol)
+#    arg_lst <- append(arg_lst, input.shape)
+#    arg_lst <- append(arg_lst, output.shape)
+#    arg_lst <- append(arg_lst, fixed.shape)
+#
+#    slist <- do.call(mxnet:::mx.symbol.infer.shape, arg_lst)
+#    if (is.null(slist)) stop("Not enough information to get shapes")
+#
+#    arg.params <- mxnet:::mx.init.create(initializer, slist$arg.shapes, ctx, skip.unknown = TRUE)
+#    #arg.params <- mx.init.create(initializer,  
+#    #                             slist$arg.shapes[-which(names(slist$arg.shapes) %in% names(fixed.shape))]
+#    #                             ,ctx, skip.unknown = TRUE)
+#       aux.params <- mxnet:::mx.init.create(initializer, slist$aux.shapes,ctx, skip.unknown = FALSE)
+#    return(list(arg.params = arg.params, aux.params = aux.params, slist))
+#}
+#
+#
+#mx.simple.bind_tst <- function(symbol, ctx, dtype ,grad.req = "null", fixed.param = NULL, slist, ...) {
+#
+#
+#  if (!mxnet:::is.MXSymbol(symbol)) stop("symbol need to be MXSymbol")
+#  #slist <- symbol$infer.shape(list(...))
+#
+#  if (is.null(slist)) {
+#    stop("Need more shape information to decide the shapes of arguments")
+#  }
+#  #print(slist$arg.shapes)
+#  if ( any(sapply(slist$arg.shapes,anyNA)) ) browser()
+#
+#  arg.arrays <- sapply(slist$arg.shapes, function(shape) {
+#    mx.nd.array(array(0,shape), ctx)
+#  }, simplify = FALSE, USE.NAMES = TRUE)
+#  aux.arrays <- sapply(slist$aux.shapes, function(shape) {
+#    mx.nd.array(array(0,shape), ctx)
+#  }, simplify = FALSE, USE.NAMES = TRUE)
+#  grad.reqs <- lapply(names(slist$arg.shapes), function(nm) {
+#    if (nm %in% fixed.param) {
+#      print("found fixed.param")
+#      "null"
+#    } else if (!endsWith(nm, "label") && !endsWith(nm, "data")) {
+#      grad.req
+#    } else {
+#      "null"
+#    }
+#  })
+#  print("BOUND")
+#  return(mxnet:::mx.symbol.bind(symbol, ctx,
+#                 arg.arrays=arg.arrays,
+#                 aux.arrays=aux.arrays,
+#                 grad.reqs = grad.reqs))
+#}
+#predict.MXFeedForwardModel_tst <- function (model, X, ctx = NULL, array.batch.size = 128, array.layout = "auto",
+#    allow.extra.params = TRUE)
+#{
+#    if (is.serialized(model))
+#        model <- mxnet:::mx.unserialize(model)
+#    if (is.null(ctx))
+#        ctx <- mxnet:::mx.ctx.default()
+#    if (is.array(X) || is.matrix(X)) {
+#        if (array.layout == "auto") {
+#            array.layout <- mxnet:::mx.model.select.layout.predict(X,
+#                model)
+#        }
+#        if (array.layout == "rowmajor") {
+#            X <- t(X)
+#        }
+#    }
+#    X <-mxnet:::mx.model.init.iter(X, NULL, batch.size = array.batch.size,
+#        is.train = FALSE)
+#    X$reset()
+#    if (!X$iter.next())
+#        stop("Cannot predict on empty iterator")
+#    dlist = X$value()
+#    ## extract shape based on symbol name
+#    ### %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#    #namedShapes <- lapply(model$symbol$arguments,function(x){
+#	#			  as.integer(strsplit(gsub("\\(([^()]*)\\)|.", "\\1", x, perl=T),",")[[1]])
+#	#   }
+#    #)
+#    #names(namedShapes) <- model$symbol$arguments
+#    #fixed.shapes <- namedShapes[sapply(namedShapes,function(x)length(x)!=0)]
+#    ### %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#
+#	fixed.shapes <- append(sapply(model$arg.params,dim),sapply(model$aux.params,dim))
+#
+#    input.names <- names(dlist)
+#    input.shape <- sapply(input.names, function(n){dim(dlist[[n]])}, simplify = FALSE)
+#    input.shape <- input.shape[1]
+#    #fixed.shapes <- append(namedShapes,lapply(fixed.param,dim))
+#    initialized <- mx.model.init.params_tst(symbol=model$symbol, 
+#				   input.shape=input.shape, 
+#				   fixed.shape=fixed.shapes, 
+#				   output.shape=NULL, 
+#				   initializer=mx.init.uniform(0), 
+#				   ctx=ctx)
+#    params <- initialized[1:2]
+#    slist <- initialized[[3]]
+#    arg_lst <- list(symbol = model$symbol, ctx = ctx, data = dim(dlist$data), grad.req = "null", slist=slist)
+#
+#    pexec <- do.call(mx.simple.bind_tst, arg_lst)
+#    if (allow.extra.params) {
+#        model$arg.params[!names(model$arg.params) %in% arguments(model$symbol)] <- NULL
+#    }
+#	mxnet:::mx.exec.update.arg.arrays(pexec, model$arg.params, match.name = TRUE)
+#    mxnet:::mx.exec.update.aux.arrays(pexec, model$aux.params, match.name = TRUE)
+#    packer <- mxnet:::mx.nd.arraypacker()
+#    X$reset()
+#    while (X$iter.next()) {
+#        dlist = X$value()
+#        mxnet:::mx.exec.update.arg.arrays(pexec, list(data = dlist$data),
+#            match.name = TRUE)
+#        mxnet:::mx.exec.forward(pexec, is.train = FALSE)
+#        out.pred <- mxnet:::mx.nd.copyto(pexec$ref.outputs[[1]], mx.cpu())
+#        padded <- X$num.pad()
+#        oshape <- dim(out.pred)
+#        ndim <- length(oshape)
+#        packer$push(mxnet:::mx.nd.slice(out.pred, 0, oshape[[ndim]] - padded))
+#    }
+#    X$reset()
+#    return(packer$get())
+#}
 
 #' @title msum 
 #' @description helper function for smoothing a sequence
@@ -417,7 +417,7 @@ traceFromImage <- function(whaleRidge,
   finImIter <- mx.io.arrayiter(netInBuffed,
                   label=0,
                   batch.size=1)
-  netOutRaw1 <- predict.MXFeedForwardModel_tst(X=finImIter,model=pathNet,ctx=mxnet::mx.cpu(),array.layout = "colmajor")
+  netOutRaw1 <- predict.MXFeedForwardModel_cust(X=finImIter,model=pathNet,ctx=mxnet::mx.cpu(),array.layout = "colmajor")
   netOutRaw <- resize(as.cimg(netOutRaw1),size_x=dim(netIn)[1], size_y=dim(netIn)[2], centering_y=.5, interpolation_type=0,boundary_conditions=1)
 
 

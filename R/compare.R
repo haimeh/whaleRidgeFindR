@@ -56,6 +56,9 @@ mx.simple.bind_cust <- function(symbol, ctx, dtype ,grad.req = "null", fixed.par
                  grad.reqs = grad.reqs))
 }
 
+#Error in packer$push(mxnet:::mx.nd.slice(out.pred, 0, oshape[[ndim]] -  :
+#  std::exception
+
 predict.MXFeedForwardModel_cust <- function(
 	model, 
 	X, 
