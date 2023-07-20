@@ -116,26 +116,42 @@ predict.MXFeedForwardModel_cust <- function(
     }
 	mxnet:::mx.exec.update.arg.arrays(pexec, model$arg.params, match.name = TRUE)
     mxnet:::mx.exec.update.aux.arrays(pexec, model$aux.params, match.name = TRUE)
-    packer <- mxnet:::mx.nd.arraypacker()
+    #packer <- mxnet:::mx.nd.arraypacker()
+	mxPacker <- list()
     X$reset()
+	i = 0
     while (X$iter.next()) {
+		i=i+1
         dlist = X$value()
 		print(dlist$data)
-        mxnet:::mx.exec.update.arg.arrays(pexec, list(data = dlist$data),
-            match.name = TRUE)
+        mxnet:::mx.exec.update.arg.arrays(pexec, list(data = dlist$data),match.name = TRUE)
         mxnet:::mx.exec.forward(pexec, is.train = FALSE)
         out.pred <- mxnet:::mx.nd.copyto(pexec$ref.outputs[[1]], mx.cpu())
-		print(out.pred)
-        padded <- X$num.pad()
-        oshape <- dim(out.pred)
-		print(oshape)
-        ndim <- length(oshape)
-		print(oshape[[ndim]] - padded)
-        packer$push(mxnet:::mx.nd.slice(out.pred, 0, oshape[[ndim]] - padded))
-		print("done")
+		mxPacker[[i]] <- out.pred
+		#print(out.pred)
+        #padded <- X$num.pad()
+        #oshape <- dim(out.pred)
+		#print(oshape)
+        #ndim <- length(oshape)
+		#print(oshape[[ndim]] - padded)
+		#browser()
+        #packer$push(mxnet:::mx.nd.slice(out.pred, 0, oshape[[ndim]] - padded))
+		#print("done")
     }
     X$reset()
-    return(packer$get())
+	#result = packer$get()
+	browser()
+	packer <- lapply(mxPacker,as.array)
+	if(length(packer)>1){
+	result <- do.call(cbind,packer)
+	}else{
+	result <- packer[[1]]
+	}
+
+	rm(packer)
+	rm(mxPacker)
+	gc()
+    return(result)
 }
 
 

@@ -26,6 +26,7 @@
 hashFromImage <- function(imageobj, pathNet=NULL, hashNet=NULL)
 {
 
+#hashFromImage("~/Work/2023/whaleMatch/images/train2022/000000000001.jpg")
    #mxnetModel <- mxnet::mx.model.load(file.path( system.file("extdata", package="whaleRidgeFindR"),'whaleRidge_triplet32_4096_whaleRidgeal'), 5600)
   if(class(imageobj)=="character" && length(imageobj)==1){
       traceResults <- traceFromImage(whaleRidge=load.image(imageobj),
