@@ -59,9 +59,6 @@ mx.simple.bind_cust <- function(symbol, ctx, dtype ,grad.req = "null", fixed.par
 #Error in packer$push(mxnet:::mx.nd.slice(out.pred, 0, oshape[[ndim]] -  :
 #  std::exception
 
-#pkgEnv = getNamespace("whaleRidgeFindR")
-#attach(pkgEnv)
-
 predict.MXFeedForwardModel_cust <- function(
 	model, 
 	X, 
@@ -115,49 +112,36 @@ predict.MXFeedForwardModel_cust <- function(
     slist <- initialized[[3]]
     arg_lst <- list(symbol = model$symbol, ctx = ctx, data = dim(dlist$data), grad.req = "null", slist=slist)
 
+
+
+
+
+
+
     pexec <- do.call(mx.simple.bind_cust, arg_lst)
-    #pexec <- do.call(mx.simple.bind, arg_lst)
     if (allow.extra.params) {
         model$arg.params[!names(model$arg.params) %in% arguments(model$symbol)] <- NULL
     }
 	mxnet:::mx.exec.update.arg.arrays(pexec, model$arg.params, match.name = TRUE)
     mxnet:::mx.exec.update.aux.arrays(pexec, model$aux.params, match.name = TRUE)
-    #packer <- mxnet:::mx.nd.arraypacker()
-	mxPacker <- list()
+    packer <- mxnet:::mx.nd.arraypacker()
     X$reset()
-	i = 0
     while (X$iter.next()) {
-			#browser()
-		i=i+1
         dlist = X$value()
-        mxnet:::mx.exec.update.arg.arrays(pexec, list(data = dlist$data),match.name = TRUE)
+        mxnet:::mx.exec.update.arg.arrays(pexec, list(data = dlist$data),
+            match.name = TRUE)
         mxnet:::mx.exec.forward(pexec, is.train = FALSE)
         out.pred <- mxnet:::mx.nd.copyto(pexec$ref.outputs[[1]], mx.cpu())
-		mxPacker[[i]] <- out.pred
-		#print(out.pred)
-        #padded <- X$num.pad()
-        #oshape <- dim(out.pred)
-		#print(oshape)
-        #ndim <- length(oshape)
-		#print(oshape[[ndim]] - padded)
-		#browser()
-        #packer$push(mxnet:::mx.nd.slice(out.pred, 0, oshape[[ndim]] - padded))
-		#print("done")
+        padded <- X$num.pad()
+        oshape <- dim(out.pred)
+        ndim <- length(oshape)
+        packer$push(mxnet:::mx.nd.slice(out.pred, 0, oshape[[ndim]] - padded))
     }
     X$reset()
-	#result = packer$get()
-	packer <- lapply(mxPacker,as.array)
-	if(length(packer)>1){
-	result <- do.call(cbind,packer)
-	}else{
-	result <- packer[[1]]
-	}
-
-	rm(packer)
-	rm(mxPacker)
-	gc()
-    return(result)
+    return(packer$get())
 }
+
+
 
 
 #' @title traceToHash 
@@ -177,20 +161,24 @@ traceToHash <- function(traceData,
   }
   print("iter")
   iterInputFormat <- sapply(traceData,function(x){as.numeric(resize(x,size_x = 200,interpolation_type = 6))})
+  dim(iterInputFormat) <- c(200,16,3,length(traceData))
   # browser()
-  dataIter <- whaleRidgeIter$new(data = iterInputFormat,
-                          data.shape = 200)
+  #dataIter <- whaleRidgeIter$new(data = iterInputFormat,
+  #                        data.shape = 200)
   print("embed")
   #is.mx.dataiter <- function(x) {
   #    any(is(x, "Rcpp_MXNativeDataIter") || is(x, "Rcpp_MXArrayDataIter"))
   #}
   
   #netEmbedding <- mxnet:::predict.MXFeedForwardModel(mxnetModel,
-  netEmbedding <- predict.MXFeedForwardModel_cust(model=mxnetModel,
-                                                     X=dataIter,
+
+  netEmbedding <- try(predict.MXFeedForwardModel_cust(model=mxnetModel,
+                                                     #X=dataIter,
+                                                     X=iterInputFormat,
                                                      array.layout = "colmajor",
                                                      ctx= mx.cpu(),
-                                                     allow.extra.params=T)
+                                                     allow.extra.params=T))
+  if(class(netEmbedding)=="try-error"){browser()}
 
   rm(dataIter)
   gc()
