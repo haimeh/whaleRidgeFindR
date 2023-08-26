@@ -31,7 +31,7 @@ mx.simple.bind_cust <- function(symbol, ctx, dtype ,grad.req = "null", fixed.par
     stop("Need more shape information to decide the shapes of arguments")
   }
   #print(slist$arg.shapes)
-  if ( any(sapply(slist$arg.shapes,anyNA)) ) browser()
+  #if ( any(sapply(slist$arg.shapes,anyNA)) ) browser()
 
   arg.arrays <- sapply(slist$arg.shapes, function(shape) {
     mx.nd.array(array(0,shape), ctx)

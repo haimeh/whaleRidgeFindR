@@ -457,7 +457,7 @@ traceFromImage <- function(whaleRidge,
     finImIter <- mx.io.arrayiter(netInReducedBuffed,
                     label=0,
                     batch.size=1)
-    netOutRawReduced <- predict.MXFeedForwardModel_tst(X=finImIter,model=pathNet,ctx=mxnet::mx.cpu(),array.layout = "colmajor")
+    netOutRawReduced <- predict.MXFeedForwardModel_cust(X=finImIter,model=pathNet,ctx=mxnet::mx.cpu(),array.layout = "colmajor")
     netOutRawReduced <- resize(as.cimg(netOutRawReduced),size_x=dim(netInReduced)[1], size_y=dim(netInReduced)[2], centering_y=.5, interpolation_type=0,boundary_conditions=1)
     #netOutRaw <- as.array(resize(netOutRaw, interpolation_type=3, size_x=newDim[1], size_y=newDim[2]))
     netOutRaw <- resize(netOutRaw, interpolation_type=3, size_x=newDim[1], size_y=newDim[2])
@@ -905,10 +905,13 @@ traceFromImage <- function(whaleRidge,
 								round(startPoint),
 								round(rightEndPoint),
 								endProxRatio)
-	pathDF <- rbind(rightPathDF,leftPathDF)
+	#pathDF <- rbind(rightPathDF,leftPathDF)
 	#meh = try(pathDF[,1])
 	#if(class(meh)=="try-error")browser()
 
+	clipStart <- max(which(abs(rightPathDF[1:20,1]-leftPathDF[1:20,1]) < 4))
+	if(any(clipStart)){midStart <- clipStart}else{midStart <- 1}
+	pathDF <- rbind(rightPathDF[nrow(rightPathDF):midStart,],leftPathDF[midStart:nrow(leftPathDF),])
 #startPointDist <- as.integer(round(((startPointByVal * ((dim(fin)[1:2]/dim(netFiltered)[1:2])) )))) #(dim(fin)/dim(finCropped))[1:2]))#* cumuResize))
 #startPointVal <- as.integer(round(((startPointByDist * ((dim(fin)[1:2]/dim(netFiltered)[1:2])) )))) #(dim(fin)/dim(finCropped))[1:2]))#* cumuResize))
 #plot(pathMap)
