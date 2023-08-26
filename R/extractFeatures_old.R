@@ -301,7 +301,7 @@ traceFromCannyEdges <- function(pathMap,
 						radiusLimit/prox)#proximity for completion
 		
 		
-		if(length(path)<75){print("Path length FAILURE");return(list(annulus=NULL,coordinates=NULL,dim=NULL))}
+		if(length(path)<25){print("Path length FAILURE");return(NULL)}
 		
 		# this section transforms the path vector found by the findPath function into coordinates for r to plot
 		stepX=c( 0, 1, 1, 1, 0, -1, -1, -1)
@@ -909,9 +909,17 @@ traceFromImage <- function(whaleRidge,
 	#meh = try(pathDF[,1])
 	#if(class(meh)=="try-error")browser()
 
-	clipStart <- max(which(abs(rightPathDF[1:20,1]-leftPathDF[1:20,1]) < 4))
-	if(any(clipStart)){midStart <- clipStart}else{midStart <- 1}
-	pathDF <- rbind(rightPathDF[nrow(rightPathDF):midStart,],leftPathDF[midStart:nrow(leftPathDF),])
+	if((!is.null(leftPathDF)) & (!is.null(rightPathDF))){
+		clipStart <- max(which(abs(rightPathDF[1:20,1]-leftPathDF[1:20,1]) < 4))
+		if(any(clipStart)){midStart <- clipStart}else{midStart <- 1}
+		pathDF <- rbind(rightPathDF[nrow(rightPathDF):midStart,],leftPathDF[midStart:nrow(leftPathDF),])
+	}else{
+		if(is.null(leftPathDF)){
+			pathDF <- rightPathDF
+		}else{
+			pathDF <- leftPathDF
+		}
+	}
 #startPointDist <- as.integer(round(((startPointByVal * ((dim(fin)[1:2]/dim(netFiltered)[1:2])) )))) #(dim(fin)/dim(finCropped))[1:2]))#* cumuResize))
 #startPointVal <- as.integer(round(((startPointByDist * ((dim(fin)[1:2]/dim(netFiltered)[1:2])) )))) #(dim(fin)/dim(finCropped))[1:2]))#* cumuResize))
 #plot(pathMap)
