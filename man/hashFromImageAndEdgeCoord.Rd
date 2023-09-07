@@ -4,8 +4,8 @@
 \alias{hashFromImageAndEdgeCoord}
 \title{hashFromImageAndEdgeCoord}
 \usage{
-curl -v http://localhost:8004/ocpu/library/finFindR/R/hashFromImageAndEdgeCoord/json \
--F "imageobj=@C:/Users/jathompson/Documents/dolphinTestingdb/jensImgs/test2.jpg"\
+curl -v http://localhost:8004/ocpu/library/whaleRidgeFindR/R/hashFromImageAndEdgeCoord/json \
+-F "imageobj=@C:/Users/jathompson/Documents/Testingdb/jensImgs/test2.jpg"\
 -F "xvec=[6,7,8,7,6,5,5,6,7,8,9]"\
 -F "yvec=[3,4,5,6,6,5,6,6,7,8,9]"
 
@@ -16,7 +16,7 @@ hashFromImageAndEdgeCoord(
 )
 }
 \arguments{
-\item{imageobj}{character vector which denots image file "directory/finImage.JPG"}
+\item{imageobj}{character vector which denots image file "directory/whaleRidgeImage.JPG"}
 
 \item{xCoordinates}{x pixel coordinates for data extraction}
 
@@ -25,14 +25,16 @@ hashFromImageAndEdgeCoord(
 \value{
 hash assiciated with the provided image and trailing edge
 }
+\description{
+hashFromImageAndEdgeCoord
+}
 \details{
 \code{extractAnnulus} wrapper for use through opencpu.
-if coordinates are generated from finFindR, \code{constrainSizeFinImage} 
+if coordinates are generated from whaleRidgeFindR, \code{constrainSizeFinImage} 
 should be called by setting boundResize = 1
 opencpu passes temp object name to function followed by \code{traceToHash}
-Coordinates should denote the pixels along the trailing edge of the fin
+Coordinates should denote the pixels along the trailing edge of the whaleRidge
 \code{extractAnnulus}
 which collects image data used for identification.
 Coordinates assume the upper left corner is denoted as 1,1 (recall, R is 1 indexed)
 }
-

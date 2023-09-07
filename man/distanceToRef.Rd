@@ -14,4 +14,3 @@ distanceToRef(queryHash, referenceHash)
 \description{
 Function to calculate the distances from a single query hash to a reference catalogue
 }
-

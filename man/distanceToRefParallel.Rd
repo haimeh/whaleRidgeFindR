@@ -4,7 +4,7 @@
 \alias{distanceToRefParallel}
 \title{distanceToRefParallel}
 \usage{
-curl http://localhost:8004/ocpu/library/finFindR/R/distanceToRefParallel/json\
+curl http://localhost:8004/ocpu/library/whaleRidgeFindR/R/distanceToRefParallel/json\
  -d "{\
  \"queryHashData\":{\"unk1\":[1,2,3]},\
  \"referenceHashData\":{\"sal\":[-1,2,4],\"bob\":[-1,-2,-4]},\
@@ -43,6 +43,5 @@ Two named lists are returned:
 \description{
 Function performing batched matching between a query catalogue to a reference catalogue
 To call from opencpu, basic format resembles hashes={[0.1, 1.5, 2.2, 3.0],[6.0, 3.3, 4.1, 5.3]}
-where each vector denotes the featues extracted from an image of a dorsal fin.
+where each vector denotes the featues extracted from an image of a dorsal whale ridge.
 }
-

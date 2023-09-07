@@ -9,4 +9,4 @@ Description: Core functions for extracting distinguishing features from dorsal r
 License: GPL (>= 2)
 Imports: Rcpp, imager
 LinkingTo: Rcpp, imager
-RoxygenNote: 5.0.1
+RoxygenNote: 7.1.0

@@ -15,4 +15,3 @@ A vector represenatation of an rle object with start ing pixel coordinates
 \description{
 Function to compress pixel coordinates for trailing edge
 }
-

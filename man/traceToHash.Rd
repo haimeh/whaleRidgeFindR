@@ -14,4 +14,3 @@ Value of type list containing:
 \description{
 Function which takes the output of \code{traceFromImage} and returns objects used for matching
 }
-

@@ -15,4 +15,3 @@ matrix of x,y pixel coordinates
 \description{
 Function to decompress rle + start coordinates into image pixel coordinates for trailing edge
 }
-
