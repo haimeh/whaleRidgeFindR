@@ -47,8 +47,8 @@ hashFromImage <- function(imageobj, pathNet=NULL, hashNet=NULL)
 #' @param  onTimeoutReturn function to evaluate if we go over time limit
 #' @return eresult of expr or result of onTimoutReturn
 forkTimeout <- function(expr, timeout=64, onTimeoutReturn = NULL){
-  loadNamespace("parallel")
-  loadNamespace("tools")
+  #loadNamespace("parallel")
+  #loadNamespace("tools")
   env <- parent.frame()
 
   child <- parallel::mcparallel(eval(expr, env), mc.interactive=NA)
@@ -95,17 +95,17 @@ hashesFromImages <- function(...){
   cores=8
   pathNet=NULL
   hashNet=NULL
-  traceFromImgWrapper <- function(imageName){
+  if(all(sapply(list(...),class)=="character")){
+    #annulus_coordinates = parallel::mclapply(list(...), forkTimeout(traceFromImgWrapper(imageName), timeout=64, onTimeoutReturn = list("hash"=NULL,"coordinates"=NULL)), mc.cores=cores)
+    annulus_coordinates = parallel::mclapply(list(...), forkTimeout(function(imageName){
         returnObj <- list()
-        traceResults <- traceFromImage(whaleRidge=load.image(imageName),
+        traceResults <- traceFromImage(whaleRidge=imager::load.image(imageName),
                        startStopCoords = NULL,
-                       pathNet = pathNet)
+                       pathNet = NULL)
         returnObj[paste0(imageName,"_ann")] <- list(traceResults$annulus)
         returnObj[paste0(imageName,"_coo")] <- list(traceResults$coordinates)
         return(returnObj)
-      }
-  if(all(sapply(list(...),class)=="character")){
-    annulus_coordinates = parallel::mclapply(list(...), forkTimeout(traceFromImgWrapper(imageName), timeout=64, onTimeoutReturn = list("hash"=NULL,"coordinates"=NULL)), mc.cores=cores)
+      }, timeout=64, onTimeoutReturn = list("hash"=NULL,"coordinates"=NULL)), mc.cores=cores)
     annulusImgs <- sapply(annulus_coordinates,function(x)
                           {x_tmp <- x[1]; names(x_tmp) <- substr(names(x_tmp), 0,nchar(names(x_tmp))-4); return(x_tmp)} )
     edgeCoords <- sapply(annulus_coordinates,function(x)
@@ -114,6 +114,8 @@ hashesFromImages <- function(...){
                 "coordinates"=edgeCoords))
   }else{stop()}
 }
+#hashesFromImages(img0="~/Work/2023/whaleTrace/images/train2022/000000000001.jpg",img1="/home/jaimerilian/Work/2023/whaleTrace/images/train2022/000000000005.jpg")
+#forkTimeout(traceFromImgWrapper("~/Work/2023/whaleTrace/images/train2022/000000000001.jpg"))
 
 
 
