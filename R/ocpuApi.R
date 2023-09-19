@@ -39,6 +39,30 @@ hashFromImage <- function(imageobj, pathNet=NULL, hashNet=NULL)
   }else{stop()}
 }
 
+#' @title forkTimeout
+#' @details wrapper to enforce time limit for use through opencpu.
+#' Enforces hard limit via forking.
+#' @param  expr function to evaluate with time limit
+#' @param  timeout time limit
+#' @param  onTimeoutReturn function to evaluate if we go over time limit
+#' @return eresult of expr or result of onTimoutReturn
+forkTimeout <- function(expr, timeout=64, onTimeoutReturn = NULL){
+  loadNamespace("parallel")
+  loadNamespace("tools")
+  env <- parent.frame()
+
+  child <- parallel::mcparallel(eval(expr, env), mc.interactive=NA)
+  out <- parallel::mccollect(child, wait=FALSE, timeout=timeout)
+
+  if(is.null(out)){ # Timed out with no result: kill.
+    tools::pskill(child$pid)
+    out <- onTimeout
+    suppressWarnings(parallel::mccollect(child)) # Clean up.
+  }else{
+    out <- out[[1L]]
+  }
+  return(out)
+}
 
 #' @title hashesFromImages
 #' @usage curl -v http://localhost:8004/ocpu/library/whaleRidgeFindR/R/hashesFromImages/json\
@@ -71,8 +95,7 @@ hashesFromImages <- function(...){
   cores=8
   pathNet=NULL
   hashNet=NULL
-  if(all(sapply(list(...),class)=="character")){
-    annulus_coordinates = parallel::mclapply(list(...), function(imageName){
+  traceFromImgWrapper <- function(imageName){
         returnObj <- list()
         traceResults <- traceFromImage(whaleRidge=load.image(imageName),
                        startStopCoords = NULL,
@@ -80,7 +103,9 @@ hashesFromImages <- function(...){
         returnObj[paste0(imageName,"_ann")] <- list(traceResults$annulus)
         returnObj[paste0(imageName,"_coo")] <- list(traceResults$coordinates)
         return(returnObj)
-      }, mc.cores=cores)
+      }
+  if(all(sapply(list(...),class)=="character")){
+    annulus_coordinates = parallel::mclapply(list(...), forkTimeout(traceFromImgWrapper(imageName), timeout=64, onTimeoutReturn = list("hash"=NULL,"coordinates"=NULL)), mc.cores=cores)
     annulusImgs <- sapply(annulus_coordinates,function(x)
                           {x_tmp <- x[1]; names(x_tmp) <- substr(names(x_tmp), 0,nchar(names(x_tmp))-4); return(x_tmp)} )
     edgeCoords <- sapply(annulus_coordinates,function(x)
